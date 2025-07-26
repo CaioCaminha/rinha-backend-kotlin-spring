@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: rinha-backend-kotlin-spring-native
+
+
+webclient:
+  pool:
+    acquire-timeout: 1000
+    max-connections: 50
+  http-client:
+    ssl:
+      handshake-timeout: PT1s
+  payment-processor:
+    default-api: ${DEFAULT_PAYMENT_PROCESSOR_API:http://localhost:8001/payments}
+    fallback-api: ${FALLBACK_PAYMENT_PROCESSOR_API:http://localhost:8001/payments}
