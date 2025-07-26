@@ -19,6 +19,13 @@ import org.springframework.stereotype.Repository
 @Repository
 class PaymentInMemoryRepository {
 
+    /**
+     * The Idea is to save as less information as possible, in this case will be two data structures
+     * holding the totalRequests and the totalAmount processed.
+     *
+     * This Repository will be called from multiple coroutines and needs to be "thread-safe" in order to avoid data races
+     * and data inconsistency
+     */
     private val defaultPaymentSummaryResults = PaymentSummaryResults()
 
     private val fallbackPaymentsSummaryResults = PaymentSummaryResults()

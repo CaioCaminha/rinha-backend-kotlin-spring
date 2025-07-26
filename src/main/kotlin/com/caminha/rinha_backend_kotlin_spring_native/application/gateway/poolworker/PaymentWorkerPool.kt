@@ -21,6 +21,9 @@ class PaymentWorkerPool(
                 workerPool.take().let { payment ->
                     /**
                      * It's launching a new coroutine for each payment inside the worker pool
+                     *
+                     * This function will be the start point of payment processing
+                     * All logic of propagating the payment and storing the details will be done inside a coroutine
                      */
                     launch {
                         // process payment
