@@ -47,13 +47,14 @@ class WebClientConfiguration(
          * Understand how this ConnectionProvider works and how HttpClient manages the connection pool
          */
         ConnectionProvider.builder("http-connection-pool-payemnts-processor")
-            .maxConnections(maxConnections)
-            .pendingAcquireTimeout(Duration.ofMillis(acquireTimeout))
+//            .maxConnections(maxConnections)
+//            .pendingAcquireTimeout(Duration.ofMillis(acquireTimeout))
             .build()
     )
 
     @Bean
     fun webClient(): WebClient {
+        // todo: Add a filter to log the request and possible errors
         return webClientBuilder.clone()
             .clientConnector(ReactorClientHttpConnector(httpClient))
             .codecs {

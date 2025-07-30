@@ -1,5 +1,6 @@
 plugins {
-	kotlin("jvm") version "1.9.25"
+	kotlin("jvm") version "2.1.0"
+	kotlin("plugin.serialization") version "1.9.0"
 	kotlin("plugin.spring") version "1.9.25"
 	id("org.springframework.boot") version "3.5.3"
 	id("io.spring.dependency-management") version "1.1.7"
@@ -19,23 +20,30 @@ repositories {
 	mavenCentral()
 }
 
+graalvmNative {
+	binaries {
+		named("main") {
+			configurationFileDirectories.from(file("src/main/resources/META-INF/native-image"))
+		}
+	}
+}
+
 dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.7.3")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.10.2")
-	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
-	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("io.projectreactor:reactor-test")
-	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation("io.netty:netty-resolver-dns-native-macos:4.1.94.Final") {
+		artifact {
+			classifier = "osx-aarch_64" // For M1/M2 Macs
+			// OR
+			// classifier = "osx-x86_64" // For Intel Macs
+		}
+	}
 }
 
 kotlin {

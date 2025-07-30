@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service
  *
  * Also - Study the effect of using stereotype annotations instead of @component
  */
-@Service
-class PaymentServiceRedis {
+//@Service
+class PaymentRedisRepository {
     /**
      * This service will be saving on a Redis database
      * Study how Redis works under the hood, if it makes a tcp request similar to an http request

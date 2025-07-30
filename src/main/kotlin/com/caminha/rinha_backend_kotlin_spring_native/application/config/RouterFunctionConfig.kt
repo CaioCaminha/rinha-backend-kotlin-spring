@@ -4,23 +4,19 @@ import com.caminha.rinha_backend_kotlin_spring_native.application.controller.Pay
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.server.RouterFunction
-import org.springframework.web.reactive.function.server.RouterFunctions
 import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.coRouter
 
 @Configuration
-class RouterFunctionConfig(
-    private val paymentHandler: PaymentHandler,
-) {
+class RouterFunctionConfig {
 
     @Bean
     fun routes(
         paymentHandler: PaymentHandler
-    ) : RouterFunction<ServerResponse> {
-        return RouterFunctions.route()
-            .GET("/payments-summary", paymentHandler::paymentsSummary)
-            .POST("/payments", paymentHandler::payments)
-            .POST("/purge", paymentHandler::payments)
-            .build()
+    ) : RouterFunction<ServerResponse> = coRouter {
+        POST("/payments", paymentHandler::payments)
+        GET("/payments-summary", paymentHandler::paymentsSummary)
+        POST("/purge-payments", paymentHandler::purge)
     }
 
 }

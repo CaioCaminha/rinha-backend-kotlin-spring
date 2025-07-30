@@ -1,15 +1,37 @@
 spring:
+  jmx:
+    enabled: false
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
   application:
     name: rinha-backend-kotlin-spring-native
+    admin:
+      enabled: false
+  boot:
+    admin:
+      client:
+        instance:
+          metadata:
+            jmx:
+              enabled: false
+
 
 
 webclient:
+  internal:
+    url: ${INTERNAL_BACKEND_URL:http://localhost:8081}
   pool:
     acquire-timeout: 1000
     max-connections: 50
-  http-client:
-    ssl:
-      handshake-timeout: PT1s
   payment-processor:
-    default-api: ${DEFAULT_PAYMENT_PROCESSOR_API:http://localhost:8001/payments}
-    fallback-api: ${FALLBACK_PAYMENT_PROCESSOR_API:http://localhost:8001/payments}
+    default-api: ${PAYMENT_PROCESSOR_DEFAULT_URL:http://localhost:8001}
+    fallback-api: ${PAYMENT_PROCESSOR_FALLBACK_URL:http://localhost:8002}
+    max-retries: 3
+server:
+  port: 8080
+
+#logging:
+#  level:
+#    org:
+#      springframework: DEBUG
+#    root: DEBUG
