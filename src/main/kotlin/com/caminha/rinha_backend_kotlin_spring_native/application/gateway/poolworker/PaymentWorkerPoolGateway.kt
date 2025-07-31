@@ -2,9 +2,13 @@ package com.caminha.rinha_backend_kotlin_spring_native.application.gateway.poolw
 
 import com.caminha.rinha_backend_kotlin_spring_native.application.controller.dto.PaymentDto
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentDetails
+import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentProcessorType
 import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerPool
 import com.caminha.rinha_backend_kotlin_spring_native.usecase.PaymentsProcessorUseCase
 import jakarta.annotation.PostConstruct
+import java.math.BigDecimal
+import java.time.Instant
+import java.util.UUID
 import java.util.concurrent.LinkedBlockingQueue
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +36,7 @@ class PaymentWorkerPoolGateway(
 
 
     //it's a reference
-    private val workerPool = Channel<PaymentDetails>(capacity = 9000)
+    private val workerPool = Channel<PaymentDto>(capacity = 9000)
 //    private val workerCount: Int = Runtime.getRuntime().availableProcessors()
     private val workerCount: Int = 16
 
@@ -59,7 +63,7 @@ class PaymentWorkerPoolGateway(
             println("consuming payment: $payment")
             try{
                 withContext(NonCancellable) {
-                    paymentsProcessorUseCase.execute(payment)
+                    paymentsProcessorUseCase.execute(payment.toPaymentDetails())
                 }
             } catch (e: Exception) {
                 println("failed to process payment | ${e.message}")
@@ -67,16 +71,21 @@ class PaymentWorkerPoolGateway(
         }
     }
 
-    override fun enqueue(paymentDetails: PaymentDetails) {
+    override fun enqueue(paymentDto: PaymentDto) {
         println("adding payment to queue")
-        workerPool.trySend(paymentDetails)
+        workerPool.trySend(paymentDto)
             .onSuccess {
-                println("Payment added to channel $paymentDetails")
+                println("Payment added to channel $paymentDto")
             }
             .onFailure {
-                println("failed add payment to channel $paymentDetails | error: ${it?.message}")
+                println("failed add payment to channel $paymentDto | error: ${it?.message}")
             }
     }
-
-
 }
+
+fun PaymentDto.toPaymentDetails() = PaymentDetails(
+    correlationId = UUID.fromString(this.correlationId),
+    amount = BigDecimal(this.amount),
+    requestedAt = Instant.now(),
+    paymentProcessorType = PaymentProcessorType.DEFAULT
+)

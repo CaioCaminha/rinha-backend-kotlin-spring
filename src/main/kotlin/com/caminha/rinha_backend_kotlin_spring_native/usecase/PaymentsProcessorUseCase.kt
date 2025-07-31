@@ -23,7 +23,7 @@ class PaymentsProcessorUseCase(
         paymentProcessorClientGateway.sendPayment(
             paymentDetails = paymentDetails,
         )?.let { savedPayment ->
-            println("Payment processed: $savedPayment")
+            println("Payment processed: ${savedPayment.amount}")
             paymentInMemoryRepository.addPayment(savedPayment)
         }
     }
