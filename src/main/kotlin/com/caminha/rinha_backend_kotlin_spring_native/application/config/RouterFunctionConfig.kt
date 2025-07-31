@@ -16,7 +16,7 @@ class RouterFunctionConfig {
     ) : RouterFunction<ServerResponse> = coRouter {
         POST("/payments", paymentHandler::payments)
         GET("/payments-summary", paymentHandler::paymentsSummary)
-        POST("/purge-payments", paymentHandler::purge)
+        POST("/purge-payments", paymentHandler::purgePayments)
     }
 
 }

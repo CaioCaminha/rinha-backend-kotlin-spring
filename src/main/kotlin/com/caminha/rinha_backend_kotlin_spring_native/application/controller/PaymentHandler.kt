@@ -1,35 +1,29 @@
 package com.caminha.rinha_backend_kotlin_spring_native.application.controller
 
 import com.caminha.rinha_backend_kotlin_spring_native.application.controller.dto.PaymentDto
-import com.caminha.rinha_backend_kotlin_spring_native.application.gateway.poolworker.PaymentWorkerPoolGateway
+import com.caminha.rinha_backend_kotlin_spring_native.application.gateway.webclient.InternalClientGateway
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentDetails
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentProcessorType
-import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentSummaryResponse
 import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerPool
 import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRepository
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import com.caminha.rinha_backend_kotlin_spring_native.utils.toJsonString
-import java.math.BigDecimal
 import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.serialization.json.Json
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.awaitBody
-import org.springframework.web.reactive.function.server.body
+import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
-import reactor.core.publisher.Mono
 
 @Component
 class PaymentHandler(
     private val paymentWorkerPool: PaymentWorkerPool,
     private val paymentInMemoryRepository: PaymentInMemoryRepository,
+    private val internalClientGateway: InternalClientGateway,
 ) {
 
      suspend fun payments(request: ServerRequest): ServerResponse {
@@ -53,30 +47,40 @@ class PaymentHandler(
         val from = request.queryParam("from").getOrNull()?.let { string -> Instant.parse(string) }
         val to = request.queryParam("to").getOrNull()?.let { string -> Instant.parse(string) }
 
-        println("$from")
-        println("$to")
-
-        val paymentSummary = paymentInMemoryRepository.getSummary(
-            from = from,
-            to = to,
-        )
-
         if(from?.isAfter(to) == true) {
             return ServerResponse.badRequest().bodyValue(
                 "Invalid request | from: $from is after to: $to"
             ).awaitSingle()
         }
 
+        println("$from")
+        println("$to")
 
-//        return ServerResponse.ok().body(
-//                paymentSummary.toJsonString(),
-//                String::class.java
-//            ).awaitSingle()
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValueAndAwait(paymentSummary.toJsonString())
+        val paymentSummaryResponse = paymentInMemoryRepository.getSummary(
+            from = from,
+            to = to,
+        ) { from, to ->
+            internalClientGateway.getPaymentsSummary(
+                from = from,
+                to = to
+            )
+        }
+
+        return ServerResponse.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValueAndAwait(paymentSummaryResponse.toJsonString())
     }
 
-    suspend fun purge(request: ServerRequest): ServerResponse {
-        TODO()
+    suspend fun purgePayments(request: ServerRequest): ServerResponse {
+        val isInternal = request.queryParam("internalRequest").isPresent
+
+        paymentInMemoryRepository.purge(
+            isInternalRequest = isInternal,
+        ) {
+            internalClientGateway.purgePayments()
+        }
+
+        return ServerResponse.ok().bodyValueAndAwait("Purged Messages")
     }
 }
 

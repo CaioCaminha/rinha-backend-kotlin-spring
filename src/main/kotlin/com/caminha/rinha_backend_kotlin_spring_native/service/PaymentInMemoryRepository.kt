@@ -61,14 +61,15 @@ class PaymentInMemoryRepository {
         }
     }
 
-    fun getSummary(
+    suspend fun getSummary(
         from: Instant? = null,
         to: Instant? = null,
-        syncBlock: (suspend () -> List<PaymentDetails>)? = null,
+        syncBlock: suspend (Instant?, Instant?) -> PaymentSummaryResponse,
     ): PaymentSummaryResponse {
-        //need to count totalRequests and totalAmount for DEFAULT and for FALLBACK
-
         if(from != null && to != null) {
+            val defaultAmount = AtomicReference<BigDecimal>(BigDecimal.ZERO)
+            val fallBackAmount = AtomicReference<BigDecimal>(BigDecimal.ZERO)
+
             val paymentsByType = payments.filter { details ->
                 details.requestedAt.isAfter(from) &&
                         details.requestedAt.isBefore(to)
@@ -76,12 +77,9 @@ class PaymentInMemoryRepository {
 
             println("paymentsByType: $paymentsByType")
 
-            val defaultAmount = AtomicReference<BigDecimal>(BigDecimal.ZERO)
-
             paymentsByType[PaymentProcessorType.DEFAULT]
                 ?.forEach { t -> defaultAmount.set(defaultAmount.get().plus(t.amount)) }
 
-            val fallBackAmount = AtomicReference<BigDecimal>(BigDecimal.ZERO)
 
             paymentsByType[PaymentProcessorType.FALLBACK]
                 ?.forEach { t -> fallBackAmount.set(fallBackAmount.get().plus(t.amount)) }
@@ -95,13 +93,60 @@ class PaymentInMemoryRepository {
                     totalAmount = fallBackAmount.get(),
                     totalRequests = paymentsByType[PaymentProcessorType.FALLBACK]?.count() ?: 0,
                 )
-            )
+            ).mergeResults(syncBlock(from, to))
         } else {
             return PaymentSummaryResponse(
                 default = defaultPaymentSummaryResults.toPaymentSummary(),
                 fallback = fallbackPaymentsSummaryResults.toPaymentSummary()
-            )
+            ).mergeResults(syncBlock(null, null))
         }
+    }
+
+    suspend fun purge(
+        isInternalRequest: Boolean,
+        syncBlock: suspend () -> Unit,
+    ) {
+        println("Cleaning List of Payments")
+        payments.clear()
+
+        println("Cleaning defaultPayments results")
+        defaultPaymentSummaryResults.totalRequests.set(0)
+        defaultPaymentSummaryResults.totalAmountAtomicReference.set(BigDecimal.ZERO)
+
+        println("Cleaning fallbackPayments results")
+        fallbackPaymentsSummaryResults.totalRequests.set(0)
+        fallbackPaymentsSummaryResults.totalAmountAtomicReference.set(BigDecimal.ZERO)
+
+        if(!isInternalRequest) {
+            println("Calling purge from the other instance")
+            syncBlock()
+        } else {
+            println("Finished Purging payments")
+        }
+    }
+
+    private fun PaymentSummaryResponse.mergeResults(
+        syncPaymentSummaryResponse: PaymentSummaryResponse
+    ): PaymentSummaryResponse {
+        return PaymentSummaryResponse(
+            default = PaymentSummary(
+                totalRequests = this.default.totalRequests.plus(
+                    syncPaymentSummaryResponse.default.totalRequests
+                ),
+                totalAmount = this.default.totalAmount.plus(
+                    syncPaymentSummaryResponse.default.totalAmount
+                )
+            ),
+            fallback = PaymentSummary(
+                totalRequests = this.fallback.totalRequests.plus(
+                    syncPaymentSummaryResponse.fallback.totalRequests
+                ),
+                totalAmount = this.fallback.totalAmount.plus(
+                    syncPaymentSummaryResponse.fallback.totalAmount
+                )
+            )
+        )
+
     }
 }
 

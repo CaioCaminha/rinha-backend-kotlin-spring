@@ -1,4 +1,44 @@
 package com.caminha.rinha_backend_kotlin_spring_native.application.gateway.webclient
 
-class InternalClientGateway {
+import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentSummaryResponse
+import java.time.Instant
+import kotlinx.coroutines.reactor.awaitSingle
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
+
+@Component
+class InternalClientGateway(
+    private val webClient: WebClient,
+    @Value("\${webclient.internal.url}")
+    val internalApi: String,
+) {
+
+    suspend fun getPaymentsSummary(
+        from: Instant?,
+        to: Instant?,
+    ): PaymentSummaryResponse {
+        return webClient.get()
+            .let {
+                if(from != null && to != null) {
+                    it.uri("$internalApi/payments_summary?from=$from&to=$to")
+                } else {
+                    it.uri("$internalApi/payments_summary")
+                }
+            }
+            .header("Content-Type", "application/json")
+            .retrieve()
+            .awaitBody<PaymentSummaryResponse>()
+    }
+
+    suspend fun purgePayments() {
+        webClient.post()
+            .uri("$internalApi/purge-payments?internalRequest=true")
+            .retrieve()
+            .toBodilessEntity()
+            .awaitSingle()
+    }
+
+
 }
