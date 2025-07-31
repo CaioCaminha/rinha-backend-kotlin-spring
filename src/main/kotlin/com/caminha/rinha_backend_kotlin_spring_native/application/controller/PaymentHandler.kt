@@ -8,9 +8,13 @@ import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerP
 import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRepository
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import com.caminha.rinha_backend_kotlin_spring_native.utils.toJsonString
+import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -35,7 +39,7 @@ class PaymentHandler(
         }
 
          println("sending payment to queue")
-         paymentWorkerPool.enqueue(paymentDto.toPaymentDetails())
+         paymentWorkerPool.enqueue(paymentDto)
 
         return ServerResponse.ok().build()
             .awaitSingle()
@@ -83,10 +87,3 @@ class PaymentHandler(
         return ServerResponse.ok().bodyValueAndAwait("Purged Messages")
     }
 }
-
-fun PaymentDto.toPaymentDetails() = PaymentDetails(
-    correlationId = this.correlationId,
-    amount = this.amount,
-    requestedAt = Instant.now(),
-    paymentProcessorType = PaymentProcessorType.DEFAULT
-)

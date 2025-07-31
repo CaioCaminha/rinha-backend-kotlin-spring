@@ -22,9 +22,9 @@ class InternalClientGateway(
         return webClient.get()
             .let {
                 if(from != null && to != null) {
-                    it.uri("$internalApi/payments_summary?from=$from&to=$to")
+                    it.uri("$internalApi/payments-summary?from=$from&to=$to")
                 } else {
-                    it.uri("$internalApi/payments_summary")
+                    it.uri("$internalApi/payments-summary")
                 }
             }
             .header("Content-Type", "application/json")
