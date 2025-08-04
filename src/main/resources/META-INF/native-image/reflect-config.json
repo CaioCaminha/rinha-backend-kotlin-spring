@@ -740,6 +740,9 @@
   "name":"kotlin.Long"
 },
 {
+  "name":"kotlin.DeprecationLevel"
+},
+{
   "name":"kotlin.Metadata",
   "queryAllDeclaredMethods":true,
   "methods":[{"name":"bv","parameterTypes":[] }, {"name":"d1","parameterTypes":[] }, {"name":"d2","parameterTypes":[] }, {"name":"k","parameterTypes":[] }, {"name":"mv","parameterTypes":[] }, {"name":"pn","parameterTypes":[] }, {"name":"xi","parameterTypes":[] }, {"name":"xs","parameterTypes":[] }]

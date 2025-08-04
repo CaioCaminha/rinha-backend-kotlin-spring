@@ -1,4 +1,8 @@
 spring:
+  aot:
+    enabled: true
+  native:
+    mode: native
   jmx:
     enabled: false
   autoconfigure:

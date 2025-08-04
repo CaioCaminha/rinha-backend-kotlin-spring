@@ -10,11 +10,14 @@ import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentProcess
 import com.caminha.rinha_backend_kotlin_spring_native.utils.serializers.BigDecimalSerializer
 import com.caminha.rinha_backend_kotlin_spring_native.utils.serializers.InstantSerializer
 import com.caminha.rinha_backend_kotlin_spring_native.utils.serializers.UUIDSerializer
+import java.time.Duration
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.serialization.Serializable
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.retry.Retry
 
 @Component
 class PaymentProcessorClientGateway (
@@ -65,20 +68,15 @@ class PaymentProcessorClientGateway (
         paymentProcessorApi: String,
         paymentDetails: PaymentDetails,
     ): Boolean {
-        val response = webClient.post()
+        return webClient.post()
             .uri("$paymentProcessorApi/payments")
             .header("Content-Type", "application/json")
-            .bodyValue(paymentDetails.toPaymentProcessorDto().toJsonString())
             .retrieve()
-            .awaitBody<String>()
-
-        println(response)
-
-        return response.contains("successfully")
-//            .map { it.statusCode.is2xxSuccessful }
-//            .retryWhen(Retry.backoff(maxRetries - 1L, Duration.ofMillis(500)))
-//            .onErrorReturn(false)
-//            .awaitSingle()
+            .toBodilessEntity()
+            .map { it.statusCode.is2xxSuccessful }
+            .retryWhen(Retry.backoff(maxRetries - 1L, Duration.ofMillis(500)))
+            .onErrorReturn(false)
+            .awaitSingle()
     }
 
 

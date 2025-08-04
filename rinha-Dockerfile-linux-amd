@@ -1,0 +1,25 @@
+# Stage 1: Builder
+FROM bellsoft/liberica-native-image-kit-container:jdk-21-nik-23-glibc AS builder
+
+RUN apk add --no-cache \
+    gcc \
+    build-base \
+    zlib-dev \
+    libstdc++ \
+    git \
+    findutils
+
+WORKDIR /app
+COPY . .
+
+RUN ./gradlew nativeCompile -Dorg.graalvm.nativeimage.imagecode=linux-amd64
+
+FROM alpine:3.19
+WORKDIR /app
+
+COPY --from=builder /app/build/native/nativeCompile/rinha-backend-kotlin-spring-native .
+# Non-root user
+RUN adduser -D appuser && chown appuser /app/rinha-backend-kotlin-spring-native
+USER appuser
+EXPOSE 8080
+ENTRYPOINT ["/app/rinha-backend-kotlin-spring-native"]

@@ -1,3 +1,5 @@
+import org.graalvm.buildtools.gradle.dsl.NativeImageOptions
+
 plugins {
 	kotlin("jvm") version "2.1.0"
 	kotlin("plugin.serialization") version "1.9.0"
@@ -23,6 +25,11 @@ repositories {
 graalvmNative {
 	binaries {
 		named("main") {
+
+			// Existing configuration
+			buildArgs.add("-R:MaximumHeapSizePercent=90")
+			buildArgs.add("--initialize-at-build-time=kotlin.DeprecationLevel")
+			buildArgs.add("--trace-class-initialization=kotlin.DeprecationLevel")
 			configurationFileDirectories.from(file("src/main/resources/META-INF/native-image"))
 		}
 	}
