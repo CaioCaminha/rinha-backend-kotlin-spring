@@ -32,7 +32,7 @@ webclient:
     fallback-api: ${PAYMENT_PROCESSOR_FALLBACK_URL:http://localhost:8002}
     max-retries: 3
 server:
-  port: 9999
+  port: ${SERVER_PORT:8080}
 
 #logging:
 #  level:
