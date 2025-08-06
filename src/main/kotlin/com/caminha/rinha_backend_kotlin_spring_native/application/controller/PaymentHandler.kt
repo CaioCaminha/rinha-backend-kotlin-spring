@@ -65,10 +65,16 @@ class PaymentHandler(
             to = to,
         ) { from, to ->
             println("calling internal payment-summary to sync and merge data")
-            internalClientGateway.getPaymentsSummary(
-                from = from,
-                to = to
-            )
+            if(
+                request.headers().header("isInternalCall").isEmpty()
+            ) {
+                internalClientGateway.getPaymentsSummary(
+                    from = from,
+                    to = to
+                )
+            } else {
+                null
+            }
         }
 
         return ServerResponse.ok()

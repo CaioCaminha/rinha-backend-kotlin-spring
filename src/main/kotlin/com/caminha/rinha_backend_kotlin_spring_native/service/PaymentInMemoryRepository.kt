@@ -69,7 +69,7 @@ class PaymentInMemoryRepository {
     suspend fun getSummary(
         from: Instant? = null,
         to: Instant? = null,
-        syncBlock: suspend (Instant?, Instant?) -> PaymentSummaryResponse,
+        syncBlock: suspend (Instant?, Instant?) -> PaymentSummaryResponse?,
     ): PaymentSummaryResponse {
         if(from != null && to != null) {
             val defaultAmount = AtomicReference<BigDecimal>(BigDecimal.ZERO)
@@ -131,26 +131,28 @@ class PaymentInMemoryRepository {
     }
 
     private fun PaymentSummaryResponse.mergeResults(
-        syncPaymentSummaryResponse: PaymentSummaryResponse
+        syncPaymentSummaryResponse: PaymentSummaryResponse?
     ): PaymentSummaryResponse {
-        return PaymentSummaryResponse(
-            default = PaymentSummary(
-                totalRequests = this.default.totalRequests.plus(
-                    syncPaymentSummaryResponse.default.totalRequests
+        return syncPaymentSummaryResponse?.let {
+            PaymentSummaryResponse(
+                default = PaymentSummary(
+                    totalRequests = this.default.totalRequests.plus(
+                        syncPaymentSummaryResponse.default.totalRequests
+                    ),
+                    totalAmount = this.default.totalAmount.plus(
+                        syncPaymentSummaryResponse.default.totalAmount
+                    )
                 ),
-                totalAmount = this.default.totalAmount.plus(
-                    syncPaymentSummaryResponse.default.totalAmount
-                )
-            ),
-            fallback = PaymentSummary(
-                totalRequests = this.fallback.totalRequests.plus(
-                    syncPaymentSummaryResponse.fallback.totalRequests
-                ),
-                totalAmount = this.fallback.totalAmount.plus(
-                    syncPaymentSummaryResponse.fallback.totalAmount
+                fallback = PaymentSummary(
+                    totalRequests = this.fallback.totalRequests.plus(
+                        syncPaymentSummaryResponse.fallback.totalRequests
+                    ),
+                    totalAmount = this.fallback.totalAmount.plus(
+                        syncPaymentSummaryResponse.fallback.totalAmount
+                    )
                 )
             )
-        )
+        } ?: this
 
     }
 }

@@ -29,6 +29,7 @@ class InternalClientGateway(
                 }
             }
             .header("Content-Type", "application/json")
+            .header("isInternalCall", "true")
             .retrieve()
             .awaitBody<PaymentSummaryResponse>()
     }
