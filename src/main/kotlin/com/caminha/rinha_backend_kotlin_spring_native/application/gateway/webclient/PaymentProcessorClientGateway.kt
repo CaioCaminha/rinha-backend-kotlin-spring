@@ -68,9 +68,11 @@ class PaymentProcessorClientGateway (
         paymentProcessorApi: String,
         paymentDetails: PaymentDetails,
     ): Boolean {
+        println("sending payment to payment-processor: $paymentProcessorApi")
         return webClient.post()
             .uri("$paymentProcessorApi/payments")
             .header("Content-Type", "application/json")
+            .bodyValue(paymentDetails.toJsonString())
             .retrieve()
             .toBodilessEntity()
             .map { it.statusCode.is2xxSuccessful }

@@ -47,14 +47,19 @@ class PaymentInMemoryRepository {
     fun addPayment(
         paymentDetails: PaymentDetails,
     ) {
+        println("Adding payment $paymentDetails to InMemoryDatabase")
         if(payments.add(paymentDetails)) {
             when(paymentDetails.paymentProcessorType) {
                 PaymentProcessorType.DEFAULT -> defaultPaymentSummaryResults.incrementValues(
                     amount = paymentDetails.amount,
-                )
+                ).also {
+                    println("Payment added to default summary results")
+                }
                 PaymentProcessorType.FALLBACK -> fallbackPaymentsSummaryResults.incrementValues(
                     amount = paymentDetails.amount,
-                )
+                ).also {
+                    println("Payment added to fallback summary results")
+                }
             }
         } else {
             println("Failed to save payment: $paymentDetails")

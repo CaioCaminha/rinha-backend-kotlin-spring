@@ -64,6 +64,7 @@ class PaymentHandler(
             from = from,
             to = to,
         ) { from, to ->
+            println("calling internal payment-summary to sync and merge data")
             internalClientGateway.getPaymentsSummary(
                 from = from,
                 to = to
