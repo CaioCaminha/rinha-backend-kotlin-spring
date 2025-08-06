@@ -16,6 +16,7 @@ import kotlinx.serialization.Serializable
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
@@ -76,12 +77,21 @@ class PaymentProcessorClientGateway (
             .bodyValue(paymentDetails.toJsonString())
             .retrieve()
             .toBodilessEntity()
-            .map { it.statusCode.is2xxSuccessful }
-            .retryWhen(Retry.backoff(maxRetries - 1L, Duration.ofMillis(500)))
+            .map {
+                println("Response status code: ${it.statusCode.value()}")
+                it.statusCode.is2xxSuccessful
+            }
             .onErrorResume { t ->
-                println(t.message)
+                when(t) {
+                    is WebClientResponseException -> {
+                        println(t)
+                        println(t.responseBodyAsString)
+                    }
+                    else -> println(t.message)
+                }
                 Mono.just<Boolean>(false)
             }
+            .retryWhen(Retry.backoff(maxRetries - 1L, Duration.ofMillis(500)))
             .awaitSingle()
     }
 

@@ -8,7 +8,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.http.codec.json.KotlinSerializationJsonDecoder
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.core.publisher.Mono
 import reactor.netty.http.client.HttpClient
 import reactor.netty.resources.ConnectionProvider
 
@@ -57,6 +59,21 @@ class WebClientConfiguration(
         // todo: Add a filter to log the request and possible errors
         return webClientBuilder.clone()
             .clientConnector(ReactorClientHttpConnector(httpClient))
+            .filter(
+                ExchangeFilterFunction.ofResponseProcessor { clientResponse ->
+                    println("Response Status: ${clientResponse.statusCode()}")
+                    clientResponse.headers().asHttpHeaders().forEach { name, values ->
+                        println("Response Header: $name=${values.joinToString(",")}")
+                    }
+                    // Log response body without consuming it
+                    clientResponse.bodyToMono(String::class.java)
+                        .defaultIfEmpty("<empty body>")
+                        .doOnNext { body ->
+                            println("Response Body: $body")
+                        }
+                        .then(Mono.just(clientResponse))
+                }
+            )
             .codecs {
                 it.defaultCodecs().maxInMemorySize((maxMemory * 1.2).toInt())
                 it.defaultCodecs().apply {
