@@ -19,6 +19,7 @@ class InternalClientGateway(
         from: Instant?,
         to: Instant?,
     ): PaymentSummaryResponse {
+        println("calling internalApi: $internalApi")
         return webClient.get()
             .let {
                 if(from != null && to != null) {

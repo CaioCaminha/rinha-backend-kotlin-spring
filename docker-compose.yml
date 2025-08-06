@@ -2,12 +2,11 @@ version: '3.8'
 
 services:
   api-1:
-    image: caminhacaio/rinha-backend-kotlin-spring-native:latest
-    container_name: api_backend_1
+    image: caminhacaio/rinha-backend-kotlin-spring-native:1.0
     environment:
       INTERNAL_BACKEND_URL: http://api-2:8080
-#      PAYMENT_PROCESSOR_DEFAULT_URL: http://payment-processor-default:8080/payments
-#      PAYMENT_PROCESSOR_FALLBACK_URL: http://payment-processor-fallback:8080/payments
+      PAYMENT_PROCESSOR_DEFAULT_URL: http://payment-processor-default:8080/payments
+      PAYMENT_PROCESSOR_FALLBACK_URL: http://payment-processor-fallback:8080/payments
     networks:
       - backend
       - payment-processor
@@ -17,12 +16,11 @@ services:
           cpus: '0.60'
           memory: '140MB'
   api-2:
-    image: caminhacaio/rinha-backend-kotlin-spring-native:latest
-    container_name: api_backend_2
+    image: caminhacaio/rinha-backend-kotlin-spring-native:1.0
     environment:
       INTERNAL_BACKEND_URL: http://api-1:8080
-#      PAYMENT_PROCESSOR_DEFAULT_URL: http://payment-processor-default:8080/payments
-#      PAYMENT_PROCESSOR_FALLBACK_URL: http://payment-processor-fallback:8080/payments
+      PAYMENT_PROCESSOR_DEFAULT_URL: http://payment-processor-default:8080/payments
+      PAYMENT_PROCESSOR_FALLBACK_URL: http://payment-processor-fallback:8080/payments
     networks:
       - backend
       - payment-processor
