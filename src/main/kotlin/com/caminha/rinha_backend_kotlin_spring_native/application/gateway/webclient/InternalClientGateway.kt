@@ -1,8 +1,10 @@
 package com.caminha.rinha_backend_kotlin_spring_native.application.gateway.webclient
 
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentSummaryResponse
+import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import java.time.Instant
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.serialization.json.Json
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
@@ -19,9 +21,9 @@ class InternalClientGateway(
     suspend fun getPaymentsSummary(
         from: Instant?,
         to: Instant?,
-    ): PaymentSummaryResponse? {
+    ): PaymentSummaryResponse {
         println("calling internalApi: $internalApi")
-        return webClient.get()
+        val response = webClient.get()
             .let {
                 if(from != null && to != null) {
                     it.uri("$internalApi/payments-summary?from=$from&to=$to")
@@ -32,7 +34,11 @@ class InternalClientGateway(
             .header("Content-Type", "application/json")
             .header("isInternalCall", "true")
             .retrieve()
-            .awaitBodyOrNull<PaymentSummaryResponse>()
+            .awaitBody<String>()
+        println("Response from payments-summary internal: $response")
+        return KotlinSerializationJsonParser
+            .DEFAULT_KOTLIN_SERIALIZATION_PARSER
+            .decodeFromString(response)
     }
 
     suspend fun purgePayments() {
