@@ -4,6 +4,7 @@ import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentSummaryRespo
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import java.time.Instant
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.serialization.json.Json
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -34,11 +35,12 @@ class InternalClientGateway(
             .header("Content-Type", "application/json")
             .header("isInternalCall", "true")
             .retrieve()
-            .awaitBody<String>()
+            .bodyToMono(String::class.java)
+            .awaitSingleOrNull()
         println("Response from payments-summary internal: $response")
         return KotlinSerializationJsonParser
             .DEFAULT_KOTLIN_SERIALIZATION_PARSER
-            .decodeFromString(response)
+            .decodeFromString(response ?: throw RuntimeException("Error parsing"))
     }
 
     suspend fun purgePayments() {
