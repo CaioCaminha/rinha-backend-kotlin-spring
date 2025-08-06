@@ -64,22 +64,25 @@ class PaymentHandler(
             from = from,
             to = to,
         ) { from, to ->
-            println("calling internal payment-summary to sync and merge data")
             if(
-                request.headers().header("isInternalCall").isEmpty()
+                request.headers().firstHeader("isInternalCall") == null
             ) {
+                println("calling internal payment-summary to sync and merge data")
+
                 internalClientGateway.getPaymentsSummary(
                     from = from,
                     to = to
                 )
             } else {
+                println("Not calling internal payment-summary")
                 null
             }
         }
 
         return ServerResponse.ok()
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValueAndAwait(paymentSummaryResponse.toJsonString())
+            .bodyValue(paymentSummaryResponse.toJsonString())
+            .awaitSingle()
     }
 
     suspend fun purgePayments(request: ServerRequest): ServerResponse {

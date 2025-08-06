@@ -100,6 +100,7 @@ class PaymentInMemoryRepository {
                 )
             ).mergeResults(syncBlock(from, to))
         } else {
+            println("From and To not informed, returning all values")
             return PaymentSummaryResponse(
                 default = defaultPaymentSummaryResults.toPaymentSummary(),
                 fallback = fallbackPaymentsSummaryResults.toPaymentSummary()
@@ -133,6 +134,7 @@ class PaymentInMemoryRepository {
     private fun PaymentSummaryResponse.mergeResults(
         syncPaymentSummaryResponse: PaymentSummaryResponse?
     ): PaymentSummaryResponse {
+        println("merging values")
         return syncPaymentSummaryResponse?.let {
             PaymentSummaryResponse(
                 default = PaymentSummary(

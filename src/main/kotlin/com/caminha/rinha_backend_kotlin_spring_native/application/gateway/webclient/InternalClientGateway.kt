@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import org.springframework.web.reactive.function.client.awaitBodyOrNull
 
 @Component
 class InternalClientGateway(
@@ -18,7 +19,7 @@ class InternalClientGateway(
     suspend fun getPaymentsSummary(
         from: Instant?,
         to: Instant?,
-    ): PaymentSummaryResponse {
+    ): PaymentSummaryResponse? {
         println("calling internalApi: $internalApi")
         return webClient.get()
             .let {
@@ -31,7 +32,7 @@ class InternalClientGateway(
             .header("Content-Type", "application/json")
             .header("isInternalCall", "true")
             .retrieve()
-            .awaitBody<PaymentSummaryResponse>()
+            .awaitBodyOrNull<PaymentSummaryResponse>()
     }
 
     suspend fun purgePayments() {
