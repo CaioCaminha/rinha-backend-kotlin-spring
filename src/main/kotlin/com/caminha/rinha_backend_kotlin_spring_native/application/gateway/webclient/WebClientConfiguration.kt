@@ -2,14 +2,18 @@ package com.caminha.rinha_backend_kotlin_spring_native.application.gateway.webcl
 
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import java.time.Duration
+import org.reactivestreams.Publisher
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.http.codec.json.KotlinSerializationJsonDecoder
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.netty.http.client.HttpClient
 import reactor.netty.resources.ConnectionProvider
@@ -65,8 +69,9 @@ class WebClientConfiguration(
                     clientResponse.headers().asHttpHeaders().forEach { name, values ->
                         println("Response Header: $name=${values.joinToString(",")}")
                     }
-                    // Log response body without consuming it
+
                     clientResponse.bodyToMono(String::class.java)
+                        .cache()
                         .defaultIfEmpty("<empty body>")
                         .doOnNext { body ->
                             println("Response Body: $body")
@@ -89,3 +94,4 @@ class WebClientConfiguration(
 
 
 }
+
