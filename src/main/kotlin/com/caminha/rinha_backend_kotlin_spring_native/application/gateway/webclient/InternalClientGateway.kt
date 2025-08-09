@@ -37,7 +37,6 @@ class InternalClientGateway(
             .retrieve()
             .bodyToMono(String::class.java)
             .awaitSingleOrNull()
-        println("Response from payments-summary internal: $response")
         return KotlinSerializationJsonParser
             .DEFAULT_KOTLIN_SERIALIZATION_PARSER
             .decodeFromString(response ?: throw RuntimeException("Error parsing"))

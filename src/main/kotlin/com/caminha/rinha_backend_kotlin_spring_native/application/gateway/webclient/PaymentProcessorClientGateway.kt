@@ -77,6 +77,7 @@ class PaymentProcessorClientGateway (
             .bodyValue(paymentDetails.toJsonString())
             .retrieve()
             .toBodilessEntity()
+            .retryWhen(Retry.backoff(maxRetries - 1L, Duration.ofMillis(300)))
             .map {
                 println("Response status code: ${it.statusCode.value()}")
                 it.statusCode.is2xxSuccessful
@@ -91,7 +92,6 @@ class PaymentProcessorClientGateway (
                 }
                 Mono.just<Boolean>(false)
             }
-            .retryWhen(Retry.backoff(maxRetries - 1L, Duration.ofMillis(500)))
             .awaitSingle()
     }
 

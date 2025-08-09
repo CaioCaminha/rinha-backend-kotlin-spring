@@ -12,6 +12,9 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -30,7 +33,11 @@ class PaymentHandler(
     private val internalClientGateway: InternalClientGateway,
 ) {
 
-     suspend fun payments(request: ServerRequest): ServerResponse {
+    /**
+     * Must check if this code it's actually running concurrently
+     * Meaning, Following the pattern of one coroutine per request.
+     */
+     suspend fun payments(request: ServerRequest): ServerResponse = coroutineScope {
         //serializes using kotlinx serialization
         val paymentDto = request.awaitBody<String>().let {
             KotlinSerializationJsonParser
@@ -41,18 +48,18 @@ class PaymentHandler(
          println("sending payment to queue")
          paymentWorkerPool.enqueue(paymentDto)
 
-        return ServerResponse.ok().build()
+        ServerResponse.ok().build()
             .awaitSingle()
     }
 
-    suspend fun paymentsSummary(request: ServerRequest): ServerResponse {
+    suspend fun paymentsSummary(request: ServerRequest): ServerResponse = coroutineScope {
 
 
         val from = request.queryParam("from").getOrNull()?.let { string -> Instant.parse(string) }
         val to = request.queryParam("to").getOrNull()?.let { string -> Instant.parse(string) }
 
         if(from?.isAfter(to) == true) {
-            return ServerResponse.badRequest().bodyValue(
+            ServerResponse.badRequest().bodyValue(
                 "Invalid request | from: $from is after to: $to"
             ).awaitSingle()
         }
@@ -79,7 +86,7 @@ class PaymentHandler(
             }
         }
 
-        return ServerResponse.ok()
+        ServerResponse.ok()
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(paymentSummaryResponse.toJsonString())
             .awaitSingle()

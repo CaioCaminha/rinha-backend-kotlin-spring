@@ -5,23 +5,17 @@ import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentDetails
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentProcessorType
 import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerPool
 import com.caminha.rinha_backend_kotlin_spring_native.usecase.PaymentsProcessorUseCase
-import jakarta.annotation.PostConstruct
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
-import java.util.concurrent.LinkedBlockingQueue
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consume
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
@@ -33,21 +27,24 @@ class PaymentWorkerPoolGateway(
 ): PaymentWorkerPool {
 
 
+    /**
+     * Check if Channel it's the best option
+     * If there isn't any bottleneck added for using Channel
+     */
+    private val workerPool = Channel<PaymentDto>(capacity = 20000)
 
-
-    //it's a reference
-    private val workerPool = Channel<PaymentDto>(capacity = 9000)
-//    private val workerCount: Int = Runtime.getRuntime().availableProcessors()
-    private val workerCount: Int = 16
+    /**
+     * Having more coroutines than available Cores or Threads to execute them
+     * brings no benefit, maybe it creates more overhead due to context switching.
+     *
+     * Study about coroutine builders to better understand this process
+     */
+    private val workerCount: Int = Runtime.getRuntime().availableProcessors()
 
     /**
      * Adding a runBlocking inside an init block will block the current thread
      * Causing initialization issues
      */
-
-//    init {
-//        runBlocking {...}
-//    }
 
     @EventListener(ApplicationReadyEvent::class)
     suspend fun startProcessing() = coroutineScope {
