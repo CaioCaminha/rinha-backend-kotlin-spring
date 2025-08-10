@@ -20,6 +20,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
+import java.net.http.HttpClient
 
 @Component
 class PaymentProcessorClientGateway (
@@ -65,6 +66,18 @@ class PaymentProcessorClientGateway (
 
 
     }
+
+    /**
+     * todo:
+     * POC: Try to Implement an HTTP Client Gateway using Pure HttpRequest from java.net
+     *
+     * Implements Atomicity and Reactive features using Kotlinx Coroutines
+     *
+     * Implements Retry and Circuit Breaker Patterns by hand
+     *
+     *
+     * POC: Try to use Undertow to handle incoming http requests as handler
+     */
 
     private suspend fun callPaymentProcessor(
         paymentProcessorApi: String,

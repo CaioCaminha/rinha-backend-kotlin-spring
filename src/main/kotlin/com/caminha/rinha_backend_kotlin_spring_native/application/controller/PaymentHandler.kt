@@ -8,23 +8,18 @@ import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerP
 import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRepository
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import com.caminha.rinha_backend_kotlin_spring_native.utils.toJsonString
-import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.awaitBody
-import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
+
+
 
 @Component
 class PaymentHandler(
@@ -32,6 +27,27 @@ class PaymentHandler(
     private val paymentInMemoryRepository: PaymentInMemoryRepository,
     private val internalClientGateway: InternalClientGateway,
 ) {
+
+    suspend fun payments(paymentDto: PaymentDto): ServerResponse = coroutineScope {
+        println("sending payment to queue")
+        paymentWorkerPool.enqueue(paymentDto)
+
+        ServerResponse.ok().build()
+            .awaitSingle()
+    }
+
+    suspend fun payments(correlationId: String, amount: String): ServerResponse = coroutineScope {
+        println("sending payment to queue")
+        paymentWorkerPool.enqueue(
+            PaymentDto(
+                correlationId = correlationId,
+                amount = amount,
+            )
+        )
+
+        ServerResponse.ok().build()
+            .awaitSingle()
+    }
 
     /**
      * Must check if this code it's actually running concurrently

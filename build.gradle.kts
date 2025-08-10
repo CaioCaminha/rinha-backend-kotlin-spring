@@ -36,14 +36,31 @@ graalvmNative {
 }
 
 dependencies {
+
+//	Http4K Dependencies
+//	implementation(platform("org.http4k:http4k-bom:6.15.1.0"))
+//	implementation("org.http4k:http4k-core")
+//	implementation("org.http4k:http4k-format-moshi")
+////	implementation("org.http4k:http4k-server-netty")
+//	implementation("org.http4k:http4k-server-servlet")
+
+	//Undertow Dependencies
+	implementation("io.undertow:undertow-core:2.3.18.Final")
+	implementation("io.undertow:undertow-servlet:2.3.18.Final")
+
+	// Serialization Dependencies
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.7.3")
+
+	//Coroutines Dependencies
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.10.2")
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
+	//Spring / Webflux Dependencies
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("io.netty:netty-resolver-dns-native-macos:4.1.94.Final") {
 		artifact {
 			classifier = "osx-aarch_64" // For M1/M2 Macs
