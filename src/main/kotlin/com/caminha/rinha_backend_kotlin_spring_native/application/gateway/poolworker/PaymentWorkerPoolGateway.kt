@@ -68,7 +68,7 @@ class PaymentWorkerPoolGateway(
         }
     }
 
-    override fun enqueue(paymentDto: PaymentDto) {
+    override suspend fun enqueue(paymentDto: PaymentDto): Unit = coroutineScope {
         println("adding payment to queue")
         workerPool.trySend(paymentDto)
             .onSuccess {

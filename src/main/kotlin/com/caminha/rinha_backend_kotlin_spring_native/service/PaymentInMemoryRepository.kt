@@ -9,6 +9,7 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import org.springframework.stereotype.Repository
@@ -31,7 +32,8 @@ class PaymentInMemoryRepository {
      * This Repository will be called from multiple coroutines and needs to be "thread-safe" in order to avoid data races
      * and data inconsistency
      */
-    private val payments = CopyOnWriteArrayList<PaymentDetails>()
+    private val payments = LinkedBlockingQueue<PaymentDetails>()
+//    private val payments = ConcurrentLinkedQueue<PaymentDetails>()
 
     private val defaultPaymentSummaryResults = PaymentSummaryResults()
     private val fallbackPaymentsSummaryResults = PaymentSummaryResults()
