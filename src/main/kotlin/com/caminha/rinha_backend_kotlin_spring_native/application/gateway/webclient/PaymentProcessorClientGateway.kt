@@ -36,7 +36,7 @@ class PaymentProcessorClientGateway (
     override suspend fun sendPayment(
         paymentDetails: PaymentDetails
     ): PaymentDetails? {
-        val default =             callPaymentProcessor(
+        val default = callPaymentProcessor(
             paymentProcessorApi = defaultPaymentProcessorApi,
             paymentDetails = paymentDetails,
         )

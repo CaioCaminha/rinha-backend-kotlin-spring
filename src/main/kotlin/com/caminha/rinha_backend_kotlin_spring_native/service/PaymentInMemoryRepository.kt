@@ -32,8 +32,8 @@ class PaymentInMemoryRepository {
      * This Repository will be called from multiple coroutines and needs to be "thread-safe" in order to avoid data races
      * and data inconsistency
      */
-    private val payments = LinkedBlockingQueue<PaymentDetails>()
-//    private val payments = ConcurrentLinkedQueue<PaymentDetails>()
+//    private val payments = LinkedBlockingQueue<PaymentDetails>()
+    private val payments = ConcurrentLinkedQueue<PaymentDetails>()
 
     private val defaultPaymentSummaryResults = PaymentSummaryResults()
     private val fallbackPaymentsSummaryResults = PaymentSummaryResults()

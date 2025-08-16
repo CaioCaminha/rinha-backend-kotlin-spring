@@ -9,6 +9,7 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -16,7 +17,6 @@ import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -54,13 +54,17 @@ class PaymentWorkerPoolGateway(
         }
     }
 
-    private fun CoroutineScope.launchWorker(id: Int) = launch {
+    private fun CoroutineScope.launchWorker(id: Int) = launch(NonCancellable) {
         println("Starting worker $id")
         workerPool.consumeEach { payment ->
             println("consuming payment: $payment")
             try{
-                withContext(NonCancellable) {
-                    paymentsProcessorUseCase.execute(payment.toPaymentDetails())
+                //launching a new coroutine within the worker
+                //in this case it will create a new coroutine for each payment
+                launch(this.coroutineContext + Dispatchers.IO) {
+                    paymentsProcessorUseCase.execute(
+                        payment.toPaymentDetails(),
+                    )
                 }
             } catch (e: Exception) {
                 println("failed to process payment | ${e.message}")

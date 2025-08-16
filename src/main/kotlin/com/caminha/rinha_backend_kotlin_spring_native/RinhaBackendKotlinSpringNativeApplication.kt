@@ -21,35 +21,40 @@ import org.springframework.web.reactive.config.EnableWebFlux
 @EnableWebFlux
 class RinhaBackendKotlinSpringNativeApplication
 
+
+/**
+ * Check performance improvement Using Undertow instead of webflux
+ */
+
 fun main(args: Array<String>) {
 	runApplication<RinhaBackendKotlinSpringNativeApplication>(*args).also { context ->
-//		val paymentHandler = context.getBean(PaymentHandler::class.java)
-//
-//		Undertow.builder()
-//			.addHttpListener(8091, "0.0.0.0")
-//			.setHandler(
-//				PathHandler()
-//					.addExactPath("/payments") { exchange: HttpServerExchange ->
-//						exchange.requestReceiver.receiveFullBytes { _, data ->
-//							runBlocking {
-//								val stringData = String(data, Charsets.UTF_8).trim()
-//
-//								println(stringData)
-//
-//								val correlationId = stringData.substring(23, 59)
-//								println(correlationId)
-//
-//								val amount = stringData.substring(75, 80)
-//								println(amount)
-//
-//								paymentHandler.payments(
-//									correlationId = correlationId,
-//									amount = amount,
-//								)
-//							}
-//						}
-//					}
-//			).build().start()
+		val paymentHandler = context.getBean(PaymentHandler::class.java)
+
+		Undertow.builder()
+			.addHttpListener(8088, "0.0.0.0")
+			.setHandler(
+				PathHandler()
+					.addExactPath("/payments") { exchange: HttpServerExchange ->
+						exchange.requestReceiver.receiveFullBytes { _, data ->
+							runBlocking {
+								val stringData = String(data, Charsets.UTF_8).trim()
+
+								println(stringData)
+
+								val correlationId = stringData.substring(23, 59)
+								println(correlationId)
+
+								val amount = stringData.substring(75, 80)
+								println(amount)
+
+								paymentHandler.payments(
+									correlationId = correlationId,
+									amount = amount,
+								)
+							}
+						}
+					}
+			).build().start()
 	}
 }
 
