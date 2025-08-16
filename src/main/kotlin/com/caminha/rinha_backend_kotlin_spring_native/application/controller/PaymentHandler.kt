@@ -9,6 +9,7 @@ import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRep
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import com.caminha.rinha_backend_kotlin_spring_native.utils.toJsonString
 import java.time.Instant
+import java.util.logging.Logger
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.reactor.awaitSingle
@@ -69,7 +70,7 @@ class PaymentHandler(
     }
 
     suspend fun paymentsSummary(request: ServerRequest): ServerResponse = coroutineScope {
-
+        Logger.getLogger(PaymentHandler::class.java.name).info("Received payment-summary request")
 
         val from = request.queryParam("from").getOrNull()?.let { string -> Instant.parse(string) }
         val to = request.queryParam("to").getOrNull()?.let { string -> Instant.parse(string) }

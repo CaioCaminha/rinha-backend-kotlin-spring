@@ -9,23 +9,23 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
 class PaymentsProcessorUseCase(
-    private val paymentProcessorClientGateway: PaymentProcessorClient,
-    private val paymentInMemoryRepository: PaymentInMemoryRepository,
+
 ) {
 
     /**
      * Propagate the payment to payment-processor
      * Save the information on the database
+     *
+     * It's processing the same payment twice
+     *
+     * Not sure if the same event it's been consumed by different workers
+     * Or if it's calling twice for the same payment
      */
     suspend fun execute(
         paymentDetails: PaymentDetails,
     ) = coroutineScope {
-        println("Started PaymentsProcessorUseCase | $paymentDetails")
-        async {
-            paymentProcessorClientGateway.sendPayment(paymentDetails)
-        }.await()?.let{ payment: PaymentDetails ->
-            paymentInMemoryRepository.addPayment(payment)
-        }
+        println("Started PaymentsProcessorUseCase | correlationId: ${paymentDetails.correlationId}")
+
     }
 
 }

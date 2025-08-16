@@ -49,7 +49,7 @@ class PaymentInMemoryRepository {
     fun addPayment(
         paymentDetails: PaymentDetails,
     ) {
-        println("Adding payment $paymentDetails to InMemoryDatabase")
+        println("Adding payment ${paymentDetails.correlationId} to InMemoryDatabase")
         if(payments.add(paymentDetails)) {
             when(paymentDetails.paymentProcessorType) {
                 PaymentProcessorType.DEFAULT -> defaultPaymentSummaryResults.incrementValues(
@@ -64,7 +64,7 @@ class PaymentInMemoryRepository {
                 }
             }
         } else {
-            println("Failed to save payment: $paymentDetails")
+            println("Failed to save payment: ${paymentDetails.correlationId}")
         }
     }
 
@@ -81,8 +81,6 @@ class PaymentInMemoryRepository {
                 details.requestedAt.isAfter(from) &&
                         details.requestedAt.isBefore(to)
             }.groupBy { it.paymentProcessorType }
-
-            println("paymentsByType: $paymentsByType")
 
             paymentsByType[PaymentProcessorType.DEFAULT]
                 ?.forEach { t -> defaultAmount.set(defaultAmount.get().plus(t.amount)) }

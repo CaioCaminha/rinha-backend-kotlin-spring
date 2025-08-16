@@ -3,19 +3,22 @@ package com.caminha.rinha_backend_kotlin_spring_native.application.gateway.poolw
 import com.caminha.rinha_backend_kotlin_spring_native.application.controller.dto.PaymentDto
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentDetails
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentProcessorType
+import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentProcessorClient
 import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerPool
-import com.caminha.rinha_backend_kotlin_spring_native.usecase.PaymentsProcessorUseCase
+import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRepository
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
@@ -23,7 +26,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class PaymentWorkerPoolGateway(
-    private val paymentsProcessorUseCase: PaymentsProcessorUseCase,
+    private val paymentProcessorClientGateway: PaymentProcessorClient,
+    private val paymentInMemoryRepository: PaymentInMemoryRepository,
 ): PaymentWorkerPool {
 
 
@@ -56,15 +60,18 @@ class PaymentWorkerPoolGateway(
 
     private fun CoroutineScope.launchWorker(id: Int) = launch(NonCancellable) {
         println("Starting worker $id")
-        workerPool.consumeEach { payment ->
-            println("consuming payment: $payment")
+        while (true) {
             try{
-                //launching a new coroutine within the worker
-                //in this case it will create a new coroutine for each payment
-                launch(this.coroutineContext + Dispatchers.IO) {
-                    paymentsProcessorUseCase.execute(
-                        payment.toPaymentDetails(),
-                    )
+                /**
+                 * It's calling payment-processor async creating a new coroutine
+                 * But it's calling paymentRepository sequentially
+                 */
+                val payment = workerPool.receive()
+
+                async {
+                    paymentProcessorClientGateway.sendPayment(payment.toPaymentDetails())
+                }.await()?.let{ payment: PaymentDetails ->
+                    paymentInMemoryRepository.addPayment(payment)
                 }
             } catch (e: Exception) {
                 println("failed to process payment | ${e.message}")
@@ -76,10 +83,10 @@ class PaymentWorkerPoolGateway(
         println("adding payment to queue")
         workerPool.trySend(paymentDto)
             .onSuccess {
-                println("Payment added to channel $paymentDto")
+                println("Payment added to channel ${paymentDto.correlationId}")
             }
             .onFailure {
-                println("failed add payment to channel $paymentDto | error: ${it?.message}")
+                println("failed add payment to channel ${paymentDto.correlationId} | error: ${it?.message}")
             }
     }
 }

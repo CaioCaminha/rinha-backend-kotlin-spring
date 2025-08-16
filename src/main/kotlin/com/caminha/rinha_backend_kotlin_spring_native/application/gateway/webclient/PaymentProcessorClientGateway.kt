@@ -43,7 +43,7 @@ class PaymentProcessorClientGateway (
         if(
             default
         ) {
-            println("successfully called default payment processor: $paymentDetails")
+            println("successfully called default payment processor: ${paymentDetails.correlationId}")
             return paymentDetails
         } else {
             /**
@@ -55,6 +55,7 @@ class PaymentProcessorClientGateway (
                 paymentDetails = paymentDetails,
             ).let{
                 return if(it == true) {
+                    println("successfully called fallback payment processor: ${paymentDetails.correlationId}")
                     paymentDetails.copy(
                         paymentProcessorType = PaymentProcessorType.FALLBACK
                     )
