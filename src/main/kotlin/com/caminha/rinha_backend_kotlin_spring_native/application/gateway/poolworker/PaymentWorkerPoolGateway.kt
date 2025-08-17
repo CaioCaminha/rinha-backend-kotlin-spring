@@ -63,12 +63,6 @@ class PaymentWorkerPoolGateway(
         }
     }
 
-    override suspend fun getPayments(): String {
-        return buildJsonObject {
-            put("numberOfPayments", JsonPrimitive(workerPool.toList().count()))
-        }.toJsonString()
-    }
-
     private fun CoroutineScope.launchWorker(id: Int) = launch(NonCancellable) {
         println("Starting worker $id")
         while (true) {

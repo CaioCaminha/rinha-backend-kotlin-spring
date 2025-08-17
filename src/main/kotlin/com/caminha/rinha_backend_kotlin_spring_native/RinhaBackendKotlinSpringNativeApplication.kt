@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
 		val port = env.getProperty("server.port", Int::class.java) ?: 8080
 
 		Undertow.builder()
-			.addHttpListener(port, "0.0.0.0")
+			.addHttpListener(8099, "0.0.0.0")
 			.setHandler(
 				PathHandler()
 					.addExactPath("/payments") { exchange: HttpServerExchange ->
@@ -75,11 +75,6 @@ fun main(args: Array<String>) {
 								isInternalCall = isInternalCall.toBoolean(),
 							)
 							exchange.responseSender.send(response.toJsonString())
-						}
-					}
-					.addExactPath("/get-worker-pool") { exchange: HttpServerExchange ->
-						runBlocking {
-							exchange.responseSender.send(paymentHandler.getPaymentsNumber())
 						}
 					}
 					.addExactPath("/purge-payments") { exchange: HttpServerExchange ->

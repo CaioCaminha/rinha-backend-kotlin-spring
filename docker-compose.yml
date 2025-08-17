@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   api-1:
-    image: caminhacaio/rinha-backend-kotlin-spring-native:16.0
+    image: caminhacaio/rinha-backend-kotlin-spring-native:17.0-amd
     environment:
       SERVER_PORT: 8080
       INTERNAL_BACKEND_URL: http://api-2:8080
@@ -11,13 +11,15 @@ services:
     networks:
       - backend
       - payment-processor
+    ports:
+      - "8094:8080"
     deploy:
       resources:
         limits:
           cpus: '0.60'
           memory: '140MB'
   api-2:
-    image: caminhacaio/rinha-backend-kotlin-spring-native:16.0
+    image: caminhacaio/rinha-backend-kotlin-spring-native:17.0-amd
     environment:
       SERVER_PORT: 8080
       INTERNAL_BACKEND_URL: http://api-1:8080
@@ -26,6 +28,8 @@ services:
     networks:
       - backend
       - payment-processor
+    ports:
+      - "8095:8080"
     deploy:
       resources:
         limits:

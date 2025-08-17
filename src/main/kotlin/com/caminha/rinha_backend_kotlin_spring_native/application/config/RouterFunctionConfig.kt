@@ -17,13 +17,13 @@ class RouterFunctionConfig {
     fun routes(
         paymentHandler: PaymentHandler
     ) : RouterFunction<ServerResponse> = coRouter {
-        POST("/payments", paymentHandler::payments)
-        GET("/payments-summary", paymentHandler::paymentsSummary)
-        POST("/purge-payments") { request ->
-            paymentHandler.purgePayments(
-                isInternalCall = request.queryParam("internalRequest").isPresent
-            )
-        }
+//        POST("/payments", paymentHandler::payments)
+//        GET("/payments-summary", paymentHandler::paymentsSummary)
+//        POST("/purge-payments") { request ->
+//            paymentHandler.purgePayments(
+//                isInternalCall = request.queryParam("internalRequest").isPresent
+//            )
+//        }
     }
 
 }
