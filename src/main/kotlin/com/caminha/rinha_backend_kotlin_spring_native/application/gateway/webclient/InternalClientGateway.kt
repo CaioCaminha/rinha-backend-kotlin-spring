@@ -44,7 +44,8 @@ class InternalClientGateway(
 
     suspend fun purgePayments() {
         webClient.post()
-            .uri("$internalApi/purge-payments?internalRequest=true")
+            .uri("$internalApi/purge-payments")
+            .header("isInternalCall", "true")
             .retrieve()
             .toBodilessEntity()
             .awaitSingle()

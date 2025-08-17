@@ -9,16 +9,27 @@ import io.undertow.Undertow
 import io.undertow.server.HttpServerExchange
 import io.undertow.server.handlers.PathHandler
 import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+import org.springframework.boot.SpringApplication
+import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.web.reactive.ReactiveWebServerFactoryAutoConfiguration
+import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration
 import org.springframework.boot.runApplication
-import org.springframework.web.reactive.config.EnableWebFlux
+import org.springframework.core.env.Environment
+import org.springframework.http.MediaType
+import org.springframework.web.reactive.function.server.ServerResponse
 
-@SpringBootApplication
-@EnableWebFlux
+@SpringBootApplication(
+	exclude = [
+		ServletWebServerFactoryAutoConfiguration::class,
+		ReactiveWebServerFactoryAutoConfiguration::class,
+	]
+)
 class RinhaBackendKotlinSpringNativeApplication
 
 
@@ -27,11 +38,16 @@ class RinhaBackendKotlinSpringNativeApplication
  */
 
 fun main(args: Array<String>) {
-	runApplication<RinhaBackendKotlinSpringNativeApplication>(*args).also { context ->
+	val application = SpringApplication(RinhaBackendKotlinSpringNativeApplication::class.java)
+	application.webApplicationType = WebApplicationType.NONE
+	application.run(*args).also { context ->
 		val paymentHandler = context.getBean(PaymentHandler::class.java)
+		val env = context.getBean(Environment::class.java)
+
+		val port = env.getProperty("server.port", Int::class.java) ?: 8080
 
 		Undertow.builder()
-			.addHttpListener(8088, "0.0.0.0")
+			.addHttpListener(port, "0.0.0.0")
 			.setHandler(
 				PathHandler()
 					.addExactPath("/payments") { exchange: HttpServerExchange ->
@@ -52,6 +68,27 @@ fun main(args: Array<String>) {
 									amount = amount,
 								)
 							}
+						}
+					}
+					.addExactPath("/payments-summary") { exchange: HttpServerExchange ->
+						runBlocking {
+							val from = exchange.queryParameters.get("from")?.firstOrNull()?.let { Instant.parse(it) }
+							val to = exchange.queryParameters.get("to")?.firstOrNull()?.let { Instant.parse(it) }
+							val isInternalCall = exchange.requestHeaders.get("isInternalCall")?.firstOrNull()
+
+							val response = paymentHandler.paymentsSummary(
+								from = from,
+								to = to,
+								isInternalCall = isInternalCall.toBoolean(),
+							)
+							exchange.responseSender.send(response.toJsonString())
+						}
+					}
+					.addExactPath("/purge-payments") { exchange: HttpServerExchange ->
+						runBlocking {
+							paymentHandler.purgePayments(
+								isInternalCall = exchange.requestHeaders.get("isInternalCall")?.firstOrNull().toBoolean(),
+							)
 						}
 					}
 			).build().start()

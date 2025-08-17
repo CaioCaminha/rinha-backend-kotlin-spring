@@ -18,6 +18,8 @@ spring:
           metadata:
             jmx:
               enabled: false
+  main:
+    web-application-type: none
 
 
 

@@ -14,13 +14,16 @@ import org.springframework.web.reactive.function.server.coRouter
 @Configuration
 class RouterFunctionConfig {
 
-    @Bean
     fun routes(
         paymentHandler: PaymentHandler
     ) : RouterFunction<ServerResponse> = coRouter {
         POST("/payments", paymentHandler::payments)
         GET("/payments-summary", paymentHandler::paymentsSummary)
-        POST("/purge-payments", paymentHandler::purgePayments)
+        POST("/purge-payments") { request ->
+            paymentHandler.purgePayments(
+                isInternalCall = request.queryParam("internalRequest").isPresent
+            )
+        }
     }
 
 }

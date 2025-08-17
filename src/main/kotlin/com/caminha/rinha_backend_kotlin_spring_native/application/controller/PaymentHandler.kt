@@ -4,6 +4,7 @@ import com.caminha.rinha_backend_kotlin_spring_native.application.controller.dto
 import com.caminha.rinha_backend_kotlin_spring_native.application.gateway.webclient.InternalClientGateway
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentDetails
 import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentProcessorType
+import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentSummaryResponse
 import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerPool
 import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRepository
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
@@ -69,6 +70,44 @@ class PaymentHandler(
             .awaitSingle()
     }
 
+    suspend fun paymentsSummary(
+        from: Instant?,
+        to: Instant?,
+        isInternalCall: Boolean? = false,
+    ): PaymentSummaryResponse = coroutineScope {
+        Logger.getLogger(PaymentHandler::class.java.name).info("Received payment-summary request")
+
+        if(from?.isAfter(to) == true) {
+            ServerResponse.badRequest().bodyValue(
+                "Invalid request | from: $from is after to: $to"
+            ).awaitSingle()
+        }
+
+        println("$from")
+        println("$to")
+
+        paymentInMemoryRepository.getSummary(
+            from = from,
+            to = to,
+        ) { from, to ->
+            if(
+                isInternalCall != true
+            ) {
+                println("calling internal payment-summary to sync and merge data")
+
+                internalClientGateway.getPaymentsSummary(
+                    from = from,
+                    to = to
+                )
+            } else {
+                println("Not calling internal payment-summary")
+                null
+            }
+        }
+
+
+    }
+
     suspend fun paymentsSummary(request: ServerRequest): ServerResponse = coroutineScope {
         Logger.getLogger(PaymentHandler::class.java.name).info("Received payment-summary request")
 
@@ -109,11 +148,11 @@ class PaymentHandler(
             .awaitSingle()
     }
 
-    suspend fun purgePayments(request: ServerRequest): ServerResponse {
-        val isInternal = request.queryParam("internalRequest").isPresent
-
+    suspend fun purgePayments(
+        isInternalCall: Boolean = false,
+    ): ServerResponse {
         paymentInMemoryRepository.purge(
-            isInternalRequest = isInternal,
+            isInternalRequest = isInternalCall,
         ) {
             internalClientGateway.purgePayments()
         }

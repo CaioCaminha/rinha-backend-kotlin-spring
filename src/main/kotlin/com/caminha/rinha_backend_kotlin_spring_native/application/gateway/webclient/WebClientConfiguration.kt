@@ -18,8 +18,6 @@ import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.netty.http.client.HttpClient
-import reactor.netty.resources.ConnectionProvider
 
 @Configuration
 class WebClientConfiguration(
@@ -49,23 +47,12 @@ class WebClientConfiguration(
 
 
 
-    val httpClient = HttpClient.create(
-        /**
-         * todo
-         * I know it's creating a connection pool but how is this pool managed?
-         * Understand how this ConnectionProvider works and how HttpClient manages the connection pool
-         */
-        ConnectionProvider.builder("http-connection-pool-payemnts-processor")
-//            .maxConnections(maxConnections)
-//            .pendingAcquireTimeout(Duration.ofMillis(acquireTimeout))
-            .build()
-    )
+
 
     @Bean
     fun webClient(): WebClient {
         // todo: Add a filter to log the request and possible errors
         return webClientBuilder.clone()
-            .clientConnector(ReactorClientHttpConnector(httpClient))
             .filter(
                 ExchangeFilterFunction {request, next ->
                     mono {

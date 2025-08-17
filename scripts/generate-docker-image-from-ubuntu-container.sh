@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run -it --name my_ubuntu -v /var/run/docker.sock:/var/run/docker.sock ubuntu:22.04
+docker run -it --platform linux/amd64 --name my_ubuntu -v /var/run/docker.sock:/var/run/docker.sock ubuntu:22.04
 
 apt update && apt install -y docker.io && apt install -y git && apt install curl && apt install unzip && apt install zip
 

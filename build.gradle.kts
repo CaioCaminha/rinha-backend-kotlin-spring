@@ -59,7 +59,14 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
 	//Spring / Webflux Dependencies
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.boot:spring-boot-starter-webflux") {
+		exclude(group = "org.springframework.boot", module = "spring-boot-starter-reactor-netty")
+		exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
+		exclude(group = "org.springframework.boot", module = "spring-boot-starter-jetty")
+		exclude(group = "org.springframework.boot", module = "spring-boot-starter-undertow")
+	}
+	implementation("io.projectreactor.netty:reactor-netty-http")
+
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("io.netty:netty-resolver-dns-native-macos:4.1.94.Final") {
 		artifact {
