@@ -8,9 +8,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PaymentDto (
-    //@Serializable(with = UUIDSerializer::class)
-    val correlationId: String,
-    //@Serializable(with = BigDecimalSerializer::class)
-    val amount: String,
+    @Serializable(with = UUIDSerializer::class)
+    val correlationId: UUID,
+    @Serializable(with = BigDecimalSerializer::class)
+    val amount: BigDecimal,
 )
 

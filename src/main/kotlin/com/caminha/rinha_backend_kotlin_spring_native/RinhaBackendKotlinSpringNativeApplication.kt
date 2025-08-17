@@ -2,18 +2,21 @@ package com.caminha.rinha_backend_kotlin_spring_native
 
 import com.caminha.rinha_backend_kotlin_spring_native.application.controller.PaymentHandler
 import com.caminha.rinha_backend_kotlin_spring_native.application.controller.dto.PaymentDto
+import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import com.caminha.rinha_backend_kotlin_spring_native.utils.serializers.BigDecimalSerializer
 import com.caminha.rinha_backend_kotlin_spring_native.utils.serializers.UUIDSerializer
 import com.caminha.rinha_backend_kotlin_spring_native.utils.toJsonString
 import io.undertow.Undertow
 import io.undertow.server.HttpServerExchange
 import io.undertow.server.handlers.PathHandler
+import io.undertow.util.Headers
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -51,21 +54,11 @@ fun main(args: Array<String>) {
 			.setHandler(
 				PathHandler()
 					.addExactPath("/payments") { exchange: HttpServerExchange ->
-						exchange.requestReceiver.receiveFullBytes { _, data ->
+						exchange.requestHeaders.put(Headers.CONTENT_TYPE, "application/json")
+						exchange.requestReceiver.receiveFullBytes() { _, data ->
 							runBlocking {
-								val stringData = String(data, Charsets.UTF_8).trim()
-
-								println(stringData)
-
-								val correlationId = stringData.substring(23, 59)
-								println(correlationId)
-
-								val amount = stringData.substring(75, 80)
-								println(amount)
-
 								paymentHandler.payments(
-									correlationId = correlationId,
-									amount = amount,
+									paymentDto = KotlinSerializationJsonParser.DEFAULT_KOTLIN_SERIALIZATION_PARSER.decodeFromString<PaymentDto>(String(data, Charsets.UTF_8).trim())
 								)
 							}
 						}
@@ -105,6 +98,6 @@ data class PaymentRequest (
 )
 
 fun PaymentRequest.toPaymentDto() = PaymentDto(
-	correlationId = this.correlationId.toString(),
-	amount = this.amount.toString(),
+	correlationId = this.correlationId,
+	amount = this.amount,
 )

@@ -9,7 +9,9 @@ import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerP
 import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRepository
 import com.caminha.rinha_backend_kotlin_spring_native.utils.KotlinSerializationJsonParser
 import com.caminha.rinha_backend_kotlin_spring_native.utils.toJsonString
+import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 import java.util.logging.Logger
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.coroutines.coroutineScope
@@ -42,8 +44,8 @@ class PaymentHandler(
         println("sending payment to queue")
         paymentWorkerPool.enqueue(
             PaymentDto(
-                correlationId = correlationId,
-                amount = amount,
+                correlationId = UUID.fromString(correlationId),
+                amount = BigDecimal(amount),
             )
         )
 

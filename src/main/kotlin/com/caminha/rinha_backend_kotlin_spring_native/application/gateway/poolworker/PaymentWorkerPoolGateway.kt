@@ -92,8 +92,8 @@ class PaymentWorkerPoolGateway(
 }
 
 fun PaymentDto.toPaymentDetails() = PaymentDetails(
-    correlationId = UUID.fromString(this.correlationId),
-    amount = BigDecimal(this.amount),
+    correlationId = this.correlationId,
+    amount = this.amount,
     requestedAt = Instant.now(),
     paymentProcessorType = PaymentProcessorType.DEFAULT
 )

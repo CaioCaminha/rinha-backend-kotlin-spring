@@ -1,6 +1,10 @@
 #!/bin/bash
 
+# AMD container
 docker run -it --platform linux/amd64 --name my_ubuntu -v /var/run/docker.sock:/var/run/docker.sock ubuntu:22.04
+
+#ARM container
+docker run -it --platform linux/arm64 --name my_ubuntu_arm -v /var/run/docker.sock:/var/run/docker.sock ubuntu:22.04
 
 apt update && apt install -y docker.io && apt install -y git && apt install curl && apt install unzip && apt install zip
 
