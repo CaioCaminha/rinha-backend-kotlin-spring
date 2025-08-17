@@ -48,7 +48,7 @@ class PaymentWorkerPoolGateway(
      *
      * Study about coroutine builders to better understand this process
      */
-    private val workerCount: Int = Runtime.getRuntime().availableProcessors()
+    private val workerCount: Int = 3
 
     /**
      * Adding a runBlocking inside an init block will block the current thread
