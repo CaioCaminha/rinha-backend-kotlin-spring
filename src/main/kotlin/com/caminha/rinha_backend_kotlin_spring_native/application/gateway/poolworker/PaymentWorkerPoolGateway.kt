@@ -6,6 +6,7 @@ import com.caminha.rinha_backend_kotlin_spring_native.domain.PaymentProcessorTyp
 import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentProcessorClient
 import com.caminha.rinha_backend_kotlin_spring_native.domain.port.PaymentWorkerPool
 import com.caminha.rinha_backend_kotlin_spring_native.service.PaymentInMemoryRepository
+import com.caminha.rinha_backend_kotlin_spring_native.utils.toJsonString
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
@@ -17,9 +18,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
+import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -56,6 +61,12 @@ class PaymentWorkerPoolGateway(
         repeat(workerCount) { id ->
             launchWorker(id)
         }
+    }
+
+    override suspend fun getPayments(): String {
+        return buildJsonObject {
+            put("numberOfPayments", JsonPrimitive(workerPool.toList().count()))
+        }.toJsonString()
     }
 
     private fun CoroutineScope.launchWorker(id: Int) = launch(NonCancellable) {

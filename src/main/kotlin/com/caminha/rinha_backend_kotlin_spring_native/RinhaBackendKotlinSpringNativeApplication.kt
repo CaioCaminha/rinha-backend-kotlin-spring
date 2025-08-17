@@ -77,6 +77,11 @@ fun main(args: Array<String>) {
 							exchange.responseSender.send(response.toJsonString())
 						}
 					}
+					.addExactPath("/get-worker-pool") { exchange: HttpServerExchange ->
+						runBlocking {
+							exchange.responseSender.send(paymentHandler.getPaymentsNumber())
+						}
+					}
 					.addExactPath("/purge-payments") { exchange: HttpServerExchange ->
 						runBlocking {
 							paymentHandler.purgePayments(

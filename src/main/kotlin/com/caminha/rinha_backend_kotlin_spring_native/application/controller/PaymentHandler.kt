@@ -53,6 +53,10 @@ class PaymentHandler(
             .awaitSingle()
     }
 
+    suspend fun getPaymentsNumber(): String {
+        return paymentWorkerPool.getPayments()
+    }
+
     /**
      * Must check if this code it's actually running concurrently
      * Meaning, Following the pattern of one coroutine per request.
